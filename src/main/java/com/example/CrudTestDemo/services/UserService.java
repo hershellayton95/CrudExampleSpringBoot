@@ -1,47 +1,48 @@
 package com.example.CrudTestDemo.services;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.CrudTestDemo.entities.User;
+import com.example.CrudTestDemo.repositories.UserRepository;
 
 
 @Service
 public class UserService {
 	
-	public static List<User> users = new ArrayList<User>();
+	@Autowired
+	UserRepository ur;
 
 	public String create(User user) {
-		users.add(user);
+		ur.saveAndFlush(user);
 		return "{\"process\":\"created\"}" ;
 	}
 
 	public List<User> getAllUsers() {
-		return users;
+		return ur.findAll();
 	}
 
 	public User getUserById(long id) {
-		Optional<User> user = users.stream().filter(item -> item.getId() == id).findFirst();
+		Optional<User> user = ur.findById(id);
 		return user.get();
 	}
 
-	public String modifyUserById(long id, User user) {
-		users.stream().filter(item -> item.getId() == id).forEach(item -> setUser(item, user));
+	public String modifyUserById(long id, User userRequest) {
+		Optional<User> user = ur.findById(id);
+		user.get().setUsername(userRequest.getUsername());
+		user.get().setLastname(userRequest.getLastname());
+		user.get().setAge(userRequest.getAge());
+		
+		ur.saveAndFlush(user.get());
+		
 		return "{\"process\":\"updated\"}" ;
-	}
-	
-	public void setUser(User item, User user) {
-		item.setUsername(user.getUsername());
-		item.setLastname(user.getLastname());
-		item.setAge(user.getAge());
 	}
 
 	public String delete(long id) {
-		Optional<User> user = users.stream().filter(item -> item.getId() == id).findFirst();
-		users.remove(user.get());
+		ur.delete(ur.findById(id).get());
 		return "{\"process\":\"deleted\"}";
 	}
 }
